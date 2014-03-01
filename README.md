@@ -76,7 +76,7 @@ together:
 
       -- output the test suite results
       kunit_output
-   END example
+    END example
 
 Since KAREL doesn't support blocks as arguments to functions or
 routines, I've found that it's best to simply create a new routine
