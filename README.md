@@ -30,7 +30,7 @@ feedback via the web browser.
 
 Look at the `src/test_kunit.kl` and `src/test_strlib.kl` files for
 real-world examples. (Note: the test_kunit.kl file is a bit hack-ish,
-but testing KUnit with KUNIT? so meta...)
+but testing KUnit with KUnit? so meta...)
 
 Here's a simple example of testing a routine that adds two INTEGERs
 together:
