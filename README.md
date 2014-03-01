@@ -1,12 +1,12 @@
-# KUNIT
+# KUnit
 
-KUNIT is a simple unit testing framework for FANUC's KAREL
-programming language. KUNIT provides useful assertions and test output
+KUnit is a simple unit testing framework for FANUC's KAREL
+programming language. KUnit provides useful assertions and test output
 feedback via the web browser.
 
 ## Example Output
 
-    KUNIT
+    KUnit
 
     ........
 
@@ -22,7 +22,7 @@ feedback via the web browser.
 3. Copy the `kunit.h.kl` to your project's support directory or the
    same directory as your KAREL test file
 4. `%INCLUDE kunit.h` in your test KAREL program
-5. Use the KUNIT assertions as described below
+5. Use the KUnit assertions as described below
 6. Translate and deploy your KAREL program to your robot
 7. Run the test suite at `http://your.robot/KAREL/your_test`
 
@@ -30,7 +30,7 @@ feedback via the web browser.
 
 Look at the `src/test_kunit.kl` and `src/test_strlib.kl` files for
 real-world examples. (Note: the test_kunit.kl file is a bit hack-ish,
-but testing KUNIT with KUNIT? so meta...)
+but testing KUnit with KUNIT? so meta...)
 
 Here's a simple example of testing a routine that adds two INTEGERs
 together:
@@ -38,7 +38,7 @@ together:
     PROGRAM test_add_int
     -- %NOLOCKGROUP is required to run KAREL from browser
     %NOLOCKGROUP
-    -- %INCLUDE the KUNIT routines
+    -- %INCLUDE the KUnit routines
     %INCLUDE kunit.h
 
     -- the ROUTINE under test
@@ -66,7 +66,7 @@ together:
     END test_00
 
     BEGIN
-      -- initialize KUNIT
+      -- initialize KUnit
       kunit_init
 
       -- do some tests
@@ -82,7 +82,7 @@ Since KAREL doesn't support blocks as arguments to functions or
 routines, I've found that it's best to simply create a new routine
 that returns a BOOLEAN result for each test since there's typically
 some setup, teardown, etc. For these contrived examples you could have
-simply used the KUNIT assertion as the second argument to `kunit_test`:
+simply used the KUnit assertion as the second argument to `kunit_test`:
 
     kunit_test('1+1=2', kunit_eq_int(2, add_int(1,1)))
 
@@ -102,25 +102,25 @@ STRINGs are equal
 `kunit_eq_pos(expected : XYZWPR; actual : XYZWPR` - Assert two
 XYZWPR positions are equal.
 
-`kunit_eq_pip(fname : STRING)` - Assert that the KUNIT pipe is equal
+`kunit_eq_pip(fname : STRING)` - Assert that the KUnit pipe is equal
 to the file located at the provided path (generally for use comparing
 STRINGs longer than 254 characters)
 
 ## Under the Hood
 
-All KTEST really does is provide a simple environment that stores
+All KUnit really does is provide a simple environment that stores
 information about the tests you perform. Tests are just any routine that
 returns a `BOOLEAN` value. If `true`, the test passes, otherwise the
-test fails. KTEST then prints out some useful information about how many
+test fails. KUnit then prints out some useful information about how many
 tests you ran, how many failed, how many assertions you made, etc. If
-you use the provided KTEST assertions, you'll also get some helpful
+you use the provided KUnit assertions, you'll also get some helpful
 debug information about the test. For example, if you use the
 `kunit_eq_str()` routine, you might see something like this if it fails:
 
     -- test routine:
     test('a eqls a', kunit_eq_str('a','b'))
 
-    -- KUNIT output:
+    -- KUnit output:
     1) Failure:
     a eqls a
     Expected "a" but got "b"
@@ -135,7 +135,7 @@ needs to be on your system $PATH.
 2. Clone the repository
 3. Run `make` to build the KAREL binary PC files
 4. Copy the binaries to your ROBOGUIDE or real robot
-5. Run the tests from `http://robot.ip/KAREL/test_ktest`
+5. Run the tests from `http://robot.ip/KAREL/test_kunit`
 
 ## Contributing
 
