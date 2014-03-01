@@ -1,0 +1,325 @@
+PROGRAM kunit
+%NOLOCKGROUP
+CONST
+  VERSION   = '0.1.0'
+  LINE_WRAP = 40
+  PIPE_FILE = 'PIP:KUNIT.DAT'
+  FAIL_FILE = 'PIP:KUNIT_FAIL.DAT'
+VAR
+  response     : FILE
+  pipe_f       : FILE
+  other_f      : FILE
+  fail_f       : FILE
+  test_count   : INTEGER
+  fail_count   : INTEGER
+  pass_count   : INTEGER
+  assrtn_count : INTEGER
+  error_msg    : STRING[254]
+
+  start_time   : INTEGER
+  end_time     : INTEGER
+  total_time   : REAL
+  entry        : INTEGER
+  status       : INTEGER
+
+%INCLUDE strlib.h
+
+-- Public: Initialize KUNIT
+ROUTINE kunit_init
+  BEGIN
+    GET_VAR(entry, '*system*', '$fast_clock', start_time, status)
+
+    OPEN FILE response   ('RW', 'RD:RESPONSE.HTM')
+    OPEN FILE fail_f ('RW', FAIL_FILE)
+
+    WRITE response ('<html><head><title>KUNIT</title><style>body { padding: 20px; }</style><body><pre>KUNIT',CR,CR)
+
+    test_count    = 0
+    fail_count    = 0
+    pass_count    = 0
+    assrtn_count  = 0
+  END kunit_init
+
+-- Private: Fail a test
+ROUTINE kunit_fail(name : STRING)
+  BEGIN
+    fail_count = fail_count + 1
+
+    WRITE fail_f (fail_count, ') Failure:', CR)
+    WRITE fail_f (name, CR)
+    WRITE fail_f (error_msg,CR,CR)
+  END kunit_fail
+
+-- Private: pass a test
+ROUTINE kunit_pass
+  BEGIN
+    pass_count = pass_count + 1
+  END kunit_pass
+
+-- Public: Perform a test
+--
+-- name   - A STRING describing what this test is testing
+-- result - A BOOLEAN that determines if the test passes or fails
+--
+-- Examples
+--
+--   kunit_test('true should pass', true)
+--   # => test passes
+--
+--   kunit_test('this test should fail', false)
+--   # => test fails
+ROUTINE kunit_test(name : STRING; result : BOOLEAN)
+  BEGIN
+    test_count = test_count + 1
+
+    IF result THEN
+      WRITE response ('.')
+      kunit_pass
+    ELSE
+      WRITE response ('F')
+      kunit_fail(name)
+    ENDIF
+
+    IF ((pass_count+fail_count) MOD LINE_WRAP = 0) THEN
+      WRITE response (CR)
+    ENDIF
+  END kunit_test
+
+-- Public: Assert that something is true
+--
+-- actual - A BOOLEAN value
+--
+-- Examples
+--
+--   kunit_assert(true)
+--   # => true
+--
+--   kunit_assert(false)
+--   # => false
+ROUTINE kunit_assert(actual : BOOLEAN) : BOOLEAN
+  BEGIN
+    assrtn_count = assrtn_count + 1
+
+    IF actual THEN
+      RETURN(true)
+    ELSE
+      error_msg = 'Expected true but got false'
+      RETURN(false)
+    ENDIF
+  END kunit_assert
+
+-- Public: Assert that two INTEGERs are equal
+--
+-- expected - The expected INTEGER value
+-- actual   - The actual INTEGER value
+--
+-- Examples
+--
+--   kunit_eq_int(1,1)
+--   # => true
+--
+--   kunit_eq_int(1,2)
+--   # => False
+ROUTINE kunit_eq_int(expected : INTEGER; actual : INTEGER) : BOOLEAN
+  BEGIN
+    assrtn_count = assrtn_count + 1
+
+    IF expected=actual THEN
+      RETURN(true)
+    ELSE
+      error_msg = 'Expected ' + i_to_s(expected) + ' but got ' + i_to_s(actual)
+      RETURN(false)
+    ENDIF
+  END kunit_eq_int
+
+ROUTINE kunit_eq_r(expected : REAL; actual : REAL) : BOOLEAN
+  BEGIN
+    assrtn_count = assrtn_count + 1
+
+    IF expected=actual THEN
+      RETURN(true)
+    ELSE
+      error_msg = 'Expected ' + r_to_s(expected) + ' but got ' + r_to_s(actual) 
+      RETURN(false)
+    ENDIF
+  END kunit_eq_r
+
+-- Public: Assert that two STRINGs are equal
+--
+-- expected - The expected STRING value
+-- actual   - The actual STRING value
+--
+-- Examples
+--
+--   kunit_eq_str('foo','foo')
+--   # => true
+--
+--   kunit_eq_str('foo','bar')
+--   # => false
+ROUTINE kunit_eq_str(expected : STRING; actual : STRING) : BOOLEAN
+  BEGIN
+    assrtn_count = assrtn_count + 1
+
+    IF UNINIT(expected) THEN
+      error_msg = 'Expected was UNINIT'
+      RETURN(false)
+    ENDIF
+
+    IF UNINIT(actual) THEN
+      error_msg = 'Actual was UNINIT'
+      RETURN(false)
+    ENDIF
+
+    IF expected=actual THEN
+      RETURN(true)
+    ELSE
+      error_msg = 'Expected "' + expected + '"' + chr(13) + '         but got "' + actual + '"' 
+      RETURN(false)
+    ENDIF
+  END kunit_eq_str
+
+-- Public: Assert that two XYZWPR positions are equal
+--
+-- expected - The expected XYZWPR value
+-- actual   - The actual XYZWPR value
+--
+-- Returns true if the X, Y, Z, W, P and R compontents are equal,
+-- false otherwise
+ROUTINE kunit_eq_pos(expected : XYZWPR; actual : XYZWPR) : BOOLEAN
+  BEGIN
+    assrtn_count = assrtn_count + 1
+
+    IF UNINIT(expected) OR UNINIT(actual) THEN
+      error_msg = 'Expected and/or actual are UNINIT'
+      RETURN(false)
+    ENDIF
+
+    IF (expected.x=actual.x) AND (expected.y=actual.y) AND (expected.z=actual.z) AND &
+       (expected.w=actual.w) AND (expected.p=actual.p) AND (expected.r=actual.r) THEN
+      RETURN(true)
+    ELSE
+      error_msg = 'Expected: ' + chr(13) &
+        + p_to_s(expected) + chr(13) &
+        + 'Actual: ' + chr(13) &
+        + p_to_s(actual)
+      RETURN(false)
+    ENDIF
+  END kunit_eq_pos
+
+-- Public: Opens the KUNIT pipe for reading and writing
+--
+-- This is used in conjunction with `k_close_pipe` and `kunit_pipe` to
+-- test long strings are equal.
+ROUTINE k_init_pipe
+  BEGIN
+    OPEN FILE pipe_f ('RW', PIPE_FILE)
+  END k_init_pipe
+
+-- Public: Close the KUNIT pipe file
+ROUTINE k_close_pipe
+  BEGIN
+    CLOSE FILE pipe_f
+  END k_close_pipe
+
+-- Public: Write to the KUNIT pipe file
+--
+-- This is used in conjunction with `kunit_eq_pip` to test that the
+-- value of the KUNIT pipe file is equal to the provided file
+ROUTINE kunit_pipe(s : STRING)
+  BEGIN
+    WRITE pipe_f (s)
+  END kunit_pipe
+
+-- Public: Assert that the KUNIT pipe is equal to the provided FILE
+--
+-- fname - The STRING filename of the FILE to test
+--
+-- Examples
+--
+--   kunit_eq_pipe('MD:somefile.dat')
+--   # => true if the KUNIT file has the same contents of
+--        'MD:somefile.dat', false otherwise
+ROUTINE kunit_eq_pip(fname : STRING) : BOOLEAN
+  VAR
+    e      : STRING[64]
+    a      : STRING[64]
+    i      : INTEGER
+    k      : INTEGER
+    j      : INTEGER
+    status : INTEGER
+    b      : BOOLEAN
+    r      : BOOLEAN
+  BEGIN
+    r = true
+    OPEN FILE pipe_f ('RO', PIPE_FILE)
+    OPEN FILE other_f ('RO', fname)
+    BYTES_AHEAD(pipe_f, i, status)
+    BYTES_AHEAD(other_f, k, status)
+
+    WHILE (i > 0) AND (k > 0) DO
+      IF i > k THEN
+        j = k
+      ELSE
+        j = i
+      ENDIF
+
+      READ pipe_f  (e::j::0)
+      READ other_f (a::j::0)
+      b = kunit_eq_str(e, a)
+      IF NOT(b) THEN
+        r = false
+      ENDIF
+
+      BYTES_AHEAD(pipe_f, i, status)
+      BYTES_AHEAD(other_f, k, status)
+    ENDWHILE
+
+    CLOSE FILE pipe_f
+    CLOSE FILE other_f
+
+    RETURN(r)
+  END kunit_eq_pip
+
+-- Public: Writes the results of the KUNIT test suite
+ROUTINE kunit_output
+  VAR
+    i      : INTEGER
+    b      : INTEGER
+    status : INTEGER
+    s      : STRING[254]
+  BEGIN
+    GET_VAR(entry, '*system*', '$fast_clock', end_time, status)
+    total_time = end_time - start_time
+
+    -- make sure we do at least 1 ITP
+    IF total_time = 0 THEN
+      total_time = 2
+    ENDIF
+
+    WRITE response (CR,CR)
+
+    WRITE response ('Finished in ', r_to_s((total_time / 1000.0)), ' seconds', CR)
+    WRITE response (r_to_s(test_count/(total_time/1000.0)), ' tests/sec, ')
+    WRITE response (r_to_s(assrtn_count/(total_time/1000.0)), ' assertions/sec', CR, CR)
+
+    CLOSE FILE fail_f
+    OPEN FILE fail_f ('RO', FAIL_FILE)
+    BYTES_AHEAD(fail_f, b, status)
+    WHILE b > 0 DO
+      READ fail_f (s::b::0)
+      WRITE response (s)
+      BYTES_AHEAD(fail_f, b, status)
+    ENDWHILE
+    CLOSE FILE fail_f
+
+    WRITE response (i_to_s(test_count), ' tests, ')
+    WRITE response (i_to_s(assrtn_count), ' assertions, ')
+    WRITE response (i_to_s(fail_count), ' failures', CR)
+
+    WRITE response ('</pre></body></html>')
+
+    CLOSE FILE response
+  END kunit_output
+
+BEGIN
+END kunit

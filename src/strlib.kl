@@ -1,0 +1,160 @@
+PROGRAM strlib
+%NOLOCKGROUP
+-- Public: Takes a string and a separator and splits it into an array
+--
+-- str : STRING - the STRING to separate
+-- sep : STRING - which character separates the string
+--
+-- Examples:
+--
+--   split_str('one,two,three',',')
+--   # => ['one','two','three','','',...,'']
+--
+-- Returns an ARRAY[16] of STRING[16]
+ROUTINE split_str(str:STRING; sep:STRING; out:ARRAY[*] OF STRING)
+  VAR
+    tmp : STRING[254]
+    i   : INTEGER
+    k   : INTEGER
+  BEGIN
+    k = 1
+    tmp = ''
+
+    -- initialize the whole out array to ''
+    FOR i = 1 TO array_len(out) DO
+      out[i] = ''
+    ENDFOR
+
+    FOR i = 1 TO STR_LEN(str) DO
+      IF (i = STR_LEN(str)) AND (SUB_STR(str,i,1) <> sep) THEN
+        tmp = tmp + SUB_STR(str,i,1)
+      ENDIF
+
+      IF (SUB_STR(str,i,1) = sep) OR (i = STR_LEN(str)) THEN
+        out[k] = tmp
+        k = k + 1
+        tmp = ''
+      ELSE
+        tmp = tmp + SUB_STR(str,i,1)
+      ENDIF
+    ENDFOR
+  END split_str
+
+-- strip whitespace from left side of string
+ROUTINE lstrip(s : STRING) : STRING
+  VAR
+    i : INTEGER
+  BEGIN
+    FOR i = 1 TO STR_LEN(s) DO
+      IF SUB_STR(s,i,1) <> ' ' THEN
+        RETURN(SUB_STR(s,i,STR_LEN(s)))
+      ENDIF
+    ENDFOR
+
+    RETURN(s)
+  END lstrip
+
+-- strip whitespace from right side of string
+ROUTINE rstrip(s : STRING) : STRING
+  VAR
+    i : INTEGER
+  BEGIN
+    FOR i = STR_LEN(s) DOWNTO 1 DO
+      IF SUB_STR(s,i,1) <> ' ' THEN
+        RETURN(SUB_STR(s,1,i))
+      ENDIF
+    ENDFOR
+
+    RETURN(s)
+  END rstrip
+
+ROUTINE b_to_s(b : BOOLEAN) : STRING
+  BEGIN
+    IF b THEN
+      RETURN('true')
+    ELSE
+      RETURN('false')
+    ENDIF
+  END b_to_s
+
+ROUTINE i_to_s(i : INTEGER) : STRING
+  VAR
+    s : STRING[16]
+  BEGIN
+    IF UNINIT(i) THEN
+      RETURN('null')
+    ENDIF
+
+    CNV_INT_STR(i, 0, 0, s)
+    RETURN(lstrip(s)) 
+  END i_to_s
+
+ROUTINE r_to_s(r : REAL) : STRING
+  VAR
+    s : STRING[16]
+    i : INTEGER
+  BEGIN
+    IF UNINIT(r) THEN
+      RETURN('null')
+    ENDIF
+
+    CNV_REAL_STR(r, 0, 3, s)
+    s = lstrip(s)
+
+    -- fix -.234 issue
+    IF SUB_STR(s,1,1) = '-' THEN
+      -- see if next char is .
+      IF SUB_STR(s,2,1) = '.' THEN
+        s = '-0.' + SUB_STR(s,3,STR_LEN(s))
+      ENDIF
+    ENDIF
+
+    -- add leading zero
+    IF SUB_STR(s,1,1) = '.' THEN
+      s = '0' + s
+    ENDIF
+
+    -- get rid of trailing zeroes
+    FOR i = STR_LEN(s) DOWNTO 1 DO
+      IF SUB_STR(s,i,1) <> '0' THEN
+        -- see if prev char is a . so we leave 1 trailing zero
+        IF SUB_STR(s,i,1) = '.' THEN
+          RETURN(SUB_STR(s,1,i+1))
+        ELSE
+          RETURN(SUB_STR(s,1,i))
+        ENDIF
+      ENDIF
+    ENDFOR
+
+    RETURN(s)
+  END r_to_s
+
+ROUTINE p_to_s(p : XYZWPR) : STRING
+  BEGIN
+    RETURN('X: ' + r_to_s(p.x) + ' Y: ' + r_to_s(p.y) + ' Z: ' + r_to_s(p.z) + chr(13) &
+      + 'W: ' + r_to_s(p.w) + ' P: ' + r_to_s(p.p) + ' R: ' + r_to_s(p.r))
+   END p_to_s
+
+-- Escapes quotes in a string
+ROUTINE esc_quotes(s : STRING) : STRING
+  VAR
+    i : INTEGER
+    r : STRING[254]
+    c : STRING[1]
+  BEGIN
+    r = ''
+    FOR i=1 TO STR_LEN(s) DO
+      -- chr(44) is '
+      c = SUB_STR(s,i,1)
+      IF (c = chr(44)) OR (c = '"') THEN
+        r = r + '\'
+      ENDIF
+
+      r = r + c
+    ENDFOR
+
+    RETURN(r)
+  END esc_quotes
+
+BEGIN
+END strlib

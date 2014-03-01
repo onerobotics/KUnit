@@ -1,0 +1,87 @@
+PROGRAM test_strlib
+%NOLOCKGROUP
+
+%INCLUDE kunit.h
+%INCLUDE strlib.h
+
+ROUTINE t_split_str : BOOLEAN
+  VAR
+    s : STRING[16]
+    o : ARRAY[4] OF STRING[16]
+  BEGIN
+    s = 'one,two,three'
+    split_str(s,',',o)
+
+    RETURN(kunit_eq_str('one',o[1]) AND
+      kunit_eq_str('two',o[2]) AND
+      kunit_eq_str('three',o[3]) AND
+      kunit_eq_str('',o[4]))
+  END t_split_str
+
+ROUTINE t_lstrip : BOOLEAN
+  BEGIN
+    RETURN(kunit_eq_str('test', lstrip('    test')) AND
+      kunit_eq_str('test', lstrip('test')))
+  END t_lstrip
+
+ROUTINE t_rstrip : BOOLEAN
+  BEGIN
+    RETURN(kunit_eq_str('test', rstrip('test    ')) AND
+      kunit_eq_str('  test', rstrip('  test  ')) AND
+      kunit_eq_str('  test', rstrip('  test')))
+  END t_rstrip
+
+ROUTINE t_b_to_s : BOOLEAN
+  BEGIN
+    RETURN(kunit_eq_str('true', b_to_s(true)) AND
+      kunit_eq_str('false', b_to_s(false)))
+  END t_b_to_s
+
+ROUTINE t_i_to_s : BOOLEAN
+  BEGIN
+    RETURN(kunit_eq_str('42', i_to_s(42)) AND
+      kunit_eq_str('-42', i_to_s(-42)))
+  END t_i_to_s
+
+ROUTINE t_r_to_s : BOOLEAN
+  BEGIN
+    RETURN(kunit_eq_str('3.14', r_to_s(3.14)) AND
+      kunit_eq_str('-3.14', r_to_s(-3.14)) AND
+      kunit_eq_str('0.5', r_to_s(0.5)) AND
+      kunit_eq_str('10.0', r_to_s(10.000)))
+  END t_r_to_s
+
+ROUTINE t_p_to_s : BOOLEAN
+  VAR
+    p : XYZWPR
+  BEGIN
+    p.x = 1.1
+    p.y = 2.2
+    p.z = 3.3
+    p.w = 4.4
+    p.p = 5.5
+    p.r = 6.6
+
+   RETURN(kunit_eq_str('X: 1.1 Y: 2.2 Z: 3.3' + chr(13) &
+     + 'W: 4.4 P: 5.5 R: 6.6', p_to_s(p)))
+  END t_p_to_s
+
+ROUTINE t_esc_quotes : BOOLEAN
+  BEGIN
+    RETURN(kunit_eq_str('\"test\"', esc_quotes('"test"')))
+  END t_esc_quotes
+
+BEGIN
+  kunit_init
+
+  kunit_test('split_str()', t_split_str)
+  kunit_test('lstrip()', t_lstrip)
+  kunit_test('rstrip()', t_rstrip)
+  kunit_test('b_to_s()', t_b_to_s)
+  kunit_test('i_to_s()', t_i_to_s)
+  kunit_test('r_to_s()', t_r_to_s)
+  kunit_test('p_to_s()', t_p_to_s)
+  kunit_test('esc_quotes()', t_esc_quotes)
+
+  kunit_output
+END test_strlib

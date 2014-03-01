@@ -1,0 +1,3 @@
+bin/*.pc
+*.swp
+config/robot.ini

@@ -1,0 +1,282 @@
+PROGRAM test_kunit
+%NOLOCKGROUP
+VAR
+  test_count   FROM kunit : INTEGER
+  fail_count   FROM kunit : INTEGER
+  pass_count   FROM kunit : INTEGER
+  assrtn_count FROM kunit : INTEGER
+  error_msg    FROM kunit : STRING[254]
+
+%INCLUDE kunit.h
+-- test private routines
+ROUTINE kunit_fail(name : STRING) FROM kunit
+ROUTINE kunit_pass                FROM kunit
+
+ROUTINE t_fail : BOOLEAN
+  VAR
+    i : INTEGER
+    b : BOOLEAN
+  BEGIN
+    i = fail_count
+    -- fail a test
+    error_msg = 'this is not a real failure... ignore me'
+    kunit_fail('kunit_fail()')
+
+    b = kunit_eq_int(i+1, fail_count)
+    -- reset fail_count
+    fail_count = i
+    -- use i
+    i = i + 1
+
+    RETURN(b)
+  END t_fail
+
+ROUTINE t_pass : BOOLEAN
+  VAR
+    i : INTEGER
+    b : BOOLEAN
+  BEGIN
+    i = pass_count
+    kunit_pass
+    b = kunit_eq_int(i+1,pass_count)
+    -- reset pass_count
+    pass_count = i
+    RETURN(b)
+  END t_pass
+
+ROUTINE t_test_p : BOOLEAN
+  VAR
+    i : INTEGER
+    b : BOOLEAN
+  BEGIN
+    i = pass_count
+    kunit_test('kunit_test() on pass', true)
+    b = kunit_eq_int(i+1, pass_count)
+    -- reset pass_count
+    pass_count = i
+    RETURN(b)
+  END t_test_p
+
+ROUTINE t_test_f : BOOLEAN
+  VAR
+    i : INTEGER
+    b : BOOLEAN
+  BEGIN
+    i = fail_count
+    error_msg = 'this one is responsible for the F'
+    kunit_test('kunit_test() on fail', false)
+    b = kunit_eq_int(i+1, fail_count)
+    -- reset fail_count
+    fail_count = i
+    RETURN(b)
+  END t_test_f
+
+ROUTINE t_assert_t : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+  BEGIN
+    i = assrtn_count
+    b = kunit_assert(true)
+    k = assrtn_count
+    c = kunit_eq_int(i+1, k)
+    RETURN(b)
+  END t_assert_t
+
+ROUTINE t_assert_f : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+  BEGIN
+    i = assrtn_count
+    b = kunit_assert(false)
+    k = assrtn_count
+    c = kunit_eq_int(i+1, k)
+    RETURN(NOT(b))
+  END t_assert_f
+
+ROUTINE t_eq_intp : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+  BEGIN
+    i = assrtn_count
+    b = kunit_eq_int(1,1)
+    k = assrtn_count
+    c = kunit_eq_int(i+1, k)
+    RETURN(b)
+  END t_eq_intp
+
+ROUTINE t_eq_intf : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+  BEGIN
+    i = assrtn_count
+    b = kunit_eq_int(1,2)
+    k = assrtn_count
+    c = kunit_eq_str('Expected 1 but got 2', error_msg)
+    c = kunit_eq_int(i+1, k)
+    RETURN(NOT(b))
+  END t_eq_intf
+
+ROUTINE t_eq_rp : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+  BEGIN
+    i = assrtn_count
+    b = kunit_eq_r(3.14,3.14)
+    k = assrtn_count
+    c = kunit_eq_int(i+1, k)
+    RETURN(b)
+  END t_eq_rp
+
+ROUTINE t_eq_rf : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+  BEGIN
+    i = assrtn_count
+    b = kunit_eq_r(3.14,3.15)
+    k = assrtn_count
+    c = kunit_eq_str('Expected 3.14 but got 3.15', error_msg)
+    c = kunit_eq_int(i+1, k)
+    RETURN(NOT(b))
+  END t_eq_rf
+
+ROUTINE t_eq_strp : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+  BEGIN
+    i = assrtn_count
+    b = kunit_eq_str('a','a')
+    k = assrtn_count
+    c = kunit_eq_int(i+1, k)
+    RETURN(b)
+  END t_eq_strp
+
+ROUTINE t_eq_strf : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+  BEGIN
+    i = assrtn_count
+    b = kunit_eq_str('a','b')
+    k = assrtn_count
+    c = kunit_eq_str('Expected "a" but got "b"', error_msg)
+    c = kunit_eq_int(i+1, k)
+    RETURN(NOT(b))
+  END t_eq_strf
+
+ROUTINE t_eq_posp : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+    p : XYZWPR
+  BEGIN
+    p.x = 0.0
+    p.y = 0.0
+    p.z = 0.0
+    p.w = 0.0
+    p.p = 0.0
+    p.r = 0.0
+
+    i = assrtn_count
+    b = kunit_eq_pos(p,p)
+    k = assrtn_count
+    c = kunit_eq_int(i+1, k)
+    RETURN(b)
+  END t_eq_posp
+
+ROUTINE t_eq_posf : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+    p : XYZWPR
+    p2 : XYZWPR
+  BEGIN
+    p.x = 0.0
+    p.y = 0.0
+    p.z = 0.0
+    p.w = 0.0
+    p.p = 0.0
+    p.r = 0.0
+    p2.x = 1.0
+    p2.y = 0.0
+    p2.z = 0.0
+    p2.w = 0.0
+    p2.p = 0.0
+    p2.r = 0.0
+
+    i = assrtn_count
+    b = kunit_eq_pos(p,p2)
+    k = assrtn_count
+    c = kunit_eq_str('Expected: ' + chr(13) &
+      + 'X: 0.0 Y: 0.0 Z: 0.0' + chr(13) &
+      + 'W: 0.0 P: 0.0 R: 0.0' + chr(13) &
+      + 'Actual: ' + chr(13) &
+      + 'X: 1.0 Y: 0.0 Z: 0.0' + chr(13) &
+      + 'W: 0.0 P: 0.0 R: 0.0', error_msg)
+    c = kunit_eq_int(i+1, k)
+    RETURN(NOT(b))
+  END t_eq_posf
+
+ROUTINE t_eq_posu : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+    p : XYZWPR
+  BEGIN
+    i = assrtn_count
+    b = kunit_eq_pos(p,p)
+    k = assrtn_count
+    c = kunit_eq_str('Expected and/or actual are UNINIT', error_msg)
+    c = kunit_eq_int(i+1, k)
+    RETURN(NOT(b))
+  END t_eq_posu
+
+BEGIN
+  kunit_init
+
+  kunit_test('kunit_fail()', t_fail)
+  kunit_test('kunit_pass()', t_pass)
+  kunit_test('kunit_test() on success', t_test_p)
+  kunit_test('kunit_test() on fail', t_test_f)
+  kunit_test('kunit_assert(true)', t_assert_t)
+  kunit_test('kunit_assert(false)', t_assert_f)
+  kunit_test('kunit_eq_int pass', t_eq_intp)
+  kunit_test('kunit_eq_int fail', t_eq_intf)
+  kunit_test('kunit_eq_r pass', t_eq_rp)
+  kunit_test('kunit_eq_r fail', t_eq_rf)
+  kunit_test('kunit_eq_str pass', t_eq_strp)
+  kunit_test('kunit_eq_str fail', t_eq_strf)
+  kunit_test('kunit_eq_pos pass', t_eq_posp)
+  kunit_test('kunit_eq_pos fail', t_eq_posf)
+  kunit_test('kunit_eq_pos with uninit', t_eq_posu)
+
+  kunit_output
+END test_kunit
