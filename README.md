@@ -35,7 +35,7 @@ but testing KUNIT with KUNIT? so meta...)
 Here's a simple example of testing a routine that adds two INTEGERs
 together:
 
-    PROGRAM example
+    PROGRAM test_add_int
     -- %NOLOCKGROUP is required to run KAREL from browser
     %NOLOCKGROUP
     -- %INCLUDE the KUNIT routines
@@ -76,7 +76,7 @@ together:
 
       -- output the test suite results
       kunit_output
-    END example
+    END test_add_int
 
 Since KAREL doesn't support blocks as arguments to functions or
 routines, I've found that it's best to simply create a new routine
