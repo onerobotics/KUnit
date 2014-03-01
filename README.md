@@ -1,8 +1,8 @@
 # KUNIT
 
-KUNIT is a unit testing framework for FANUC's KAREL programming
-language. KUNIT provides useful assertions and test output feedback via
-the web browser.
+KUNIT is a simple unit testing framework for FANUC's KAREL
+programming language. KUNIT provides useful assertions and test output
+feedback via the web browser.
 
 ## Example Output
 
@@ -105,6 +105,25 @@ XYZWPR positions are equal.
 `kunit_eq_pip(fname : STRING)` - Assert that the KUNIT pipe is equal
 to the file located at the provided path (generally for use comparing
 STRINGs longer than 254 characters)
+
+## Under the Hood
+
+All KTEST really does is provide a simple environment that stores
+information about the tests you perform. Tests are just any routine that
+returns a `BOOLEAN` value. If `true`, the test passes, otherwise the
+test fails. KTEST then prints out some useful information about how many
+tests you ran, how many failed, how many assertions you made, etc. If
+you use the provided KTEST assertions, you'll also get some helpful
+debug information about the test. For example, if you use the
+`kunit_eq_str()` routine, you might see something like this if it fails:
+
+    -- test routine:
+    test('a eqls a', kunit_eq_str('a','b'))
+
+    -- KUNIT output:
+    1) Failure:
+    a eqls a
+    Expected "a" but got "b"
 
 ## Development
 
