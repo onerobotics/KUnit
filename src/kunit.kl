@@ -33,6 +33,7 @@ ROUTINE kunit_init
     OPEN FILE fail_f ('RW', FAIL_FILE)
 
     WRITE response (
+        '<!DOCTYPE html>',
         '<html><head>',
         '<title>KUnit</title>',
         '<style>body { padding: 20px; }</style>',
