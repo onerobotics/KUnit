@@ -324,7 +324,7 @@ ROUTINE kunit_output
     WRITE response (i_to_s(assrtn_count), ' assertions, ')
     WRITE response (i_to_s(fail_count), ' failures', CR)
 
-    WRITE response ('</pre></body></html>')
+    WRITE response ('</pre></body></html>', CR)
 
     CLOSE FILE response
   END kunit_output
