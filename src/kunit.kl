@@ -33,7 +33,7 @@ ROUTINE kunit_init
     OPEN FILE fail_f ('RW', FAIL_FILE)
 
     WRITE response ('<html><head><title>KUnit</title><style>body {',
-                    'padding: 20px; }</style><body><pre>KUnit',CR,CR)
+                    'padding: 20px; }</style></head><body><pre>KUnit',CR,CR)
 
     test_count    = 0
     fail_count    = 0
