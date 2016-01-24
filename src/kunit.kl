@@ -37,6 +37,7 @@ ROUTINE kunit_init
         '<html><head>',
         '<title>KUnit</title>',
         '<style>body { padding: 20px; }</style>',
+        '<meta charset="UTF-8" />',
         '</head><body>',
         '<pre>', CR,
         'KUnit', CR, CR)
