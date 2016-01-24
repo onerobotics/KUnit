@@ -32,8 +32,13 @@ ROUTINE kunit_init
     OPEN FILE response   ('RW', 'RD:RESPONSE.HTM')
     OPEN FILE fail_f ('RW', FAIL_FILE)
 
-    WRITE response ('<html><head><title>KUnit</title><style>body {',
-                    'padding: 20px; }</style></head><body><pre>KUnit',CR,CR)
+    WRITE response (
+        '<html><head>',
+        '<title>KUnit</title>',
+        '<style>body { padding: 20px; }</style>',
+        '</head><body>',
+        '<pre>', CR,
+        'KUnit', CR, CR)
 
     test_count    = 0
     fail_count    = 0
