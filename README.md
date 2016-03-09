@@ -23,8 +23,16 @@ feedback via the web browser.
    same directory as your KAREL test file
 4. `%INCLUDE kunit.h` in your test KAREL program
 5. Use the KUnit assertions as described below
-6. Translate and deploy your KAREL program to your robot
-7. Run the test suite at `http://your.robot/KAREL/your_test`
+6. Make sure to use `kunit_done` at the end of your test file
+7. Translate and deploy your KAREL program to your robot
+8. Run the test suite at `http://your.robot/KAREL/kunit?filenames=your_test`
+
+## Running Multiple Tests
+
+You can run multiple test files in parallel by a comma-separated list
+of filenames to the test runner.
+
+    http://your.robot/KAREL/kunit?test_kunit,test_strlib
 
 ## Example
 
@@ -66,16 +74,13 @@ together:
     END test_00
 
     BEGIN
-      -- initialize KUnit
-      kunit_init
-
       -- do some tests
       kunit_test('1+1=2', test_11)
       kunit_test('2+2=4', test_22)
       kunit_test('0+0=0', test_00)
 
-      -- output the test suite results
-      kunit_output
+      -- tell the test runner we are done
+	  kunit_done
     END test_add_int
 
 Since KAREL doesn't support blocks as arguments to functions or
