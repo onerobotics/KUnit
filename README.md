@@ -32,7 +32,7 @@ feedback via the web browser.
 You can run multiple test files in parallel by a comma-separated list
 of filenames to the test runner.
 
-    http://your.robot/KAREL/kunit?test_kunit,test_strlib
+    http://your.robot/KAREL/kunit?filenames=test_kunit,test_strlib
 
 ## Example
 
