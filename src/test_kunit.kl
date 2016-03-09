@@ -260,8 +260,6 @@ ROUTINE t_eq_posu : BOOLEAN
   END t_eq_posu
 
 BEGIN
-  kunit_init
-
   kunit_test('kunit_fail()', t_fail)
   kunit_test('kunit_pass()', t_pass)
   kunit_test('kunit_test() on success', t_test_p)
@@ -277,6 +275,5 @@ BEGIN
   kunit_test('kunit_eq_pos pass', t_eq_posp)
   kunit_test('kunit_eq_pos fail', t_eq_posf)
   kunit_test('kunit_eq_pos with uninit', t_eq_posu)
-
-  kunit_output
+  kunit_done
 END test_kunit

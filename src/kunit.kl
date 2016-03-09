@@ -1,20 +1,29 @@
 PROGRAM kunit
 %NOLOCKGROUP
 CONST
-  VERSION   = '0.1.0'
-  LINE_WRAP = 40
-  PIPE_FILE = 'PIP:KUNIT.DAT'
-  FAIL_FILE = 'PIP:KUNIT_FAIL.DAT'
+  VERSION    = '0.1.0'
+  LINE_WRAP  = 40
+  PIPE_FILE  = 'PIP:KUNIT.DAT'
+  FAIL_FILE  = 'PIP:KUNIT_FAIL.DAT'
+  PROG_PIPE  = 'PIP:KUNIT_PROGRESS.DAT'
+  KUNIT_SEMA = 1
+  MAX_WAIT   = 1000
 VAR
   response     : FILE
   pipe_f       : FILE
   other_f      : FILE
   fail_f       : FILE
+  prog_f       : FILE
   test_count   : INTEGER
   fail_count   : INTEGER
   pass_count   : INTEGER
   assrtn_count : INTEGER
   error_msg    : STRING[254]
+  filenames    : STRING[254]
+  filenames_a  : ARRAY[16] OF STRING[16]
+  timeout      : BOOLEAN
+  task_count   : INTEGER
+  i            : INTEGER
 
   start_time   : INTEGER
   end_time     : INTEGER
@@ -24,13 +33,18 @@ VAR
 
 %INCLUDE strlib.h
 
--- Public: Initialize KUNIT
+-- Private: Initialize KUNIT
 ROUTINE kunit_init
   BEGIN
     GET_VAR(entry, '*system*', '$fast_clock', start_time, status)
 
-    OPEN FILE response   ('RW', 'RD:RESPONSE.HTM')
+    OPEN FILE response ('RW', 'RD:RESPONSE.HTM')
+	-- empty fail_f
     OPEN FILE fail_f ('RW', FAIL_FILE)
+	CLOSE FILE fail_f
+	-- empty prog_pipe
+    OPEN FILE prog_f ('RW', PROG_PIPE)
+	CLOSE file prog_f
 
     WRITE response (
         '<!DOCTYPE html>',
@@ -46,6 +60,9 @@ ROUTINE kunit_init
     fail_count    = 0
     pass_count    = 0
     assrtn_count  = 0
+    task_count    = 0
+
+	CLEAR_SEMA(KUNIT_SEMA)
   END kunit_init
 
 -- Private: Fail a test
@@ -53,9 +70,11 @@ ROUTINE kunit_fail(name : STRING)
   BEGIN
     fail_count = fail_count + 1
 
+	OPEN FILE fail_f ('AP', FAIL_FILE)
     WRITE fail_f (fail_count, ') Failure:', CR)
     WRITE fail_f (name, CR)
     WRITE fail_f (error_msg,CR,CR)
+	CLOSE FILE fail_f
   END kunit_fail
 
 -- Private: pass a test
@@ -80,18 +99,26 @@ ROUTINE kunit_test(name : STRING; result : BOOLEAN)
   BEGIN
     test_count = test_count + 1
 
+    OPEN FILE prog_f ('AP', PROG_PIPE)
     IF result THEN
-      WRITE response ('.')
+      WRITE prog_f ('.')
       kunit_pass
     ELSE
-      WRITE response ('F')
+      WRITE prog_f ('F')
       kunit_fail(name)
     ENDIF
 
     IF ((pass_count+fail_count) MOD LINE_WRAP = 0) THEN
-      WRITE response (CR)
+      WRITE prog_f (CR)
     ENDIF
+	CLOSE FILE prog_f
   END kunit_test
+
+-- Public: tell the test runner that this file is finished
+ROUTINE kunit_done
+  BEGIN
+    POST_SEMA(KUNIT_SEMA)
+  END kunit_done
 
 -- Public: Assert that something is true
 --
@@ -288,7 +315,7 @@ ROUTINE kunit_eq_pip(fname : STRING) : BOOLEAN
     RETURN(r)
   END kunit_eq_pip
 
--- Public: Writes the results of the KUNIT test suite
+-- Private: Writes the results of the KUNIT test suite
 ROUTINE kunit_output
   VAR
     i      : INTEGER
@@ -304,13 +331,21 @@ ROUTINE kunit_output
       total_time = 2
     ENDIF
 
+	OPEN FILE prog_f ('RO', PROG_PIPE)
+	BYTES_AHEAD(prog_F, b, status)
+	WHILE b > 0 DO
+	  READ prog_f (s::b::0)
+	  WRITE response (s)
+	  BYTES_AHEAD(prog_F, b, status)
+	ENDWHILE
+	CLOSE FILE prog_f
+
     WRITE response (CR,CR)
 
     WRITE response ('Finished in ', r_to_s((total_time / 1000.0)), ' seconds', CR)
     WRITE response (r_to_s(test_count/(total_time/1000.0)), ' tests/sec, ')
     WRITE response (r_to_s(assrtn_count/(total_time/1000.0)), ' assertions/sec', CR, CR)
 
-    CLOSE FILE fail_f
     OPEN FILE fail_f ('RO', FAIL_FILE)
     BYTES_AHEAD(fail_f, b, status)
     WHILE b > 0 DO
@@ -329,5 +364,44 @@ ROUTINE kunit_output
     CLOSE FILE response
   END kunit_output
 
+ROUTINE kunit_spawn(filename : STRING)
+  BEGIN
+    RUN_TASK(filename, 0, false, false, 0, status)
+	IF status<>0 THEN
+      WRITE response ('could not spawn task ', filename, CR, 'status', status)
+	ELSE
+      task_count = task_count + 1
+	ENDIF
+  END kunit_spawn
+
 BEGIN
+
+  kunit_init
+
+  IF UNINIT(filenames) OR (filenames='') THEN
+	WRITE response ('Please provide a list of test filenames')
+	ABORT
+  ENDIF
+
+  split_str(filenames, ',', filenames_a)
+  FOR i=1 TO 16 DO
+    IF NOT(UNINIT(filenames_a[i])) THEN
+	  IF filenames_a[i]<>'' THEN
+		-- todo: validate filename
+        kunit_spawn(filenames_a[i])
+	  ENDIF
+	ENDIF
+  ENDFOR
+
+  WHILE task_count>0 DO
+    PEND_SEMA(KUNIT_SEMA, MAX_WAIT, timeout)
+    WRITE('.')
+    task_count = task_count - 1
+	IF timeout THEN
+	  WRITE response ('Timed out waiting for a task', CR)
+	ENDIF
+  ENDWHILE
+  WRITE(CR)
+
+  kunit_output
 END kunit

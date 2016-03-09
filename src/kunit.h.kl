@@ -1,7 +1,5 @@
-ROUTINE kunit_init                                                   FROM kunit
-ROUTINE kunit_output                                                 FROM kunit
-
 ROUTINE kunit_test(name : STRING; result : BOOLEAN)                  FROM kunit
+ROUTINE kunit_done                                                   FROM kunit
 
 ROUTINE kunit_assert(b : BOOLEAN)                          : BOOLEAN FROM kunit
 ROUTINE kunit_eq_int(expected : INTEGER; actual : INTEGER) : BOOLEAN FROM kunit

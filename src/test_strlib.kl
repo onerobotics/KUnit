@@ -72,8 +72,6 @@ ROUTINE t_esc_quotes : BOOLEAN
   END t_esc_quotes
 
 BEGIN
-  kunit_init
-
   kunit_test('split_str()', t_split_str)
   kunit_test('lstrip()', t_lstrip)
   kunit_test('rstrip()', t_rstrip)
@@ -82,6 +80,5 @@ BEGIN
   kunit_test('r_to_s()', t_r_to_s)
   kunit_test('p_to_s()', t_p_to_s)
   kunit_test('esc_quotes()', t_esc_quotes)
-
-  kunit_output
+  kunit_done
 END test_strlib
