@@ -415,7 +415,6 @@ BEGIN
 
   WHILE task_count>0 DO
     PEND_SEMA(KUNIT_SEMA, MAX_WAIT, timeout)
-    WRITE('.')
     task_count = task_count - 1
     IF timeout THEN
       WRITE response ('Timed out waiting for a task', CR)
