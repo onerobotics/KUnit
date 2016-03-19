@@ -27,6 +27,12 @@ feedback via the web browser.
 7. Translate and deploy your KAREL program to your robot
 8. Run the test suite at `http://your.robot/KAREL/kunit?filenames=your_test`
 
+## Output Formatting
+
+The output is unformatted by default. Set `output=html` to get HTML formatting.
+
+    http://your.robot/KAREL/kunit?filenames=your_test&output=html
+
 ## Running Multiple Tests
 
 You can run multiple test files in parallel by a comma-separated list
