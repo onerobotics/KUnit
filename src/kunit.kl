@@ -1,5 +1,6 @@
 PROGRAM kunit
 %NOLOCKGROUP
+%UNINITVARS
 CONST
   VERSION    = '0.1.0'
   LINE_WRAP  = 40
@@ -24,6 +25,8 @@ VAR
   timeout      : BOOLEAN
   task_count   : INTEGER
   i            : INTEGER
+  output       : STRING[12]
+  url          : STRING[254]
 
   start_time   : INTEGER
   end_time     : INTEGER
@@ -38,6 +41,9 @@ ROUTINE kunit_init
   BEGIN
     GET_VAR(entry, '*system*', '$fast_clock', start_time, status)
 
+    IF UNINIT(output) THEN output = ''; ENDIF
+    IF UNINIT(filenames) THEN filenames = ''; ENDIF
+
     OPEN FILE response ('RW', 'RD:RESPONSE.HTM')
     -- empty fail_f
     OPEN FILE fail_f ('RW', FAIL_FILE)
@@ -46,15 +52,18 @@ ROUTINE kunit_init
     OPEN FILE prog_f ('RW', PROG_PIPE)
     CLOSE file prog_f
 
-    WRITE response (
+    IF output = 'html' THEN
+      WRITE response (
         '<!DOCTYPE html>',
         '<html><head>',
         '<title>KUnit</title>',
         '<style>body { padding: 20px; }</style>',
         '<meta charset="UTF-8" />',
         '</head><body>',
-        '<pre>', CR,
-        'KUnit', CR, CR)
+        '<pre>', CR)
+    ENDIF
+
+    WRITE response ('KUnit', CR, CR)
 
     test_count    = 0
     fail_count    = 0
@@ -359,9 +368,9 @@ ROUTINE kunit_output
     WRITE response (i_to_s(assrtn_count), ' assertions, ')
     WRITE response (i_to_s(fail_count), ' failures', CR)
 
-    WRITE response ('</pre></body></html>', CR)
-
-    CLOSE FILE response
+    IF output = 'html' THEN
+      WRITE response ('</pre></body></html>', CR)
+    ENDIF
   END kunit_output
 
 ROUTINE kunit_spawn(filename : STRING)
@@ -374,12 +383,23 @@ ROUTINE kunit_spawn(filename : STRING)
     ENDIF
   END kunit_spawn
 
-BEGIN
+ROUTINE kunit_clean
+  BEGIN
+    CLOSE FILE response
+    CLOSE FILE fail_f
+    CLOSE FILE prog_f
 
+    filenames = ''
+    output    = ''
+  END kunit_clean
+
+
+BEGIN
   kunit_init
 
-  IF UNINIT(filenames) OR (filenames='') THEN
-    WRITE response ('Please provide a list of test filenames')
+  IF filenames='' THEN
+    WRITE response ('Please provide a list of test filenames via the GET parameter.', CR)
+    kunit_clean
     ABORT
   ENDIF
 
@@ -404,4 +424,5 @@ BEGIN
   WRITE(CR)
 
   kunit_output
+  kunit_clean
 END kunit
