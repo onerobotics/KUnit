@@ -1,0 +1,8 @@
+ROUTINE split_str(str:STRING; sep:STRING; out:ARRAY[*] OF STRING) FROM strlib
+ROUTINE lstrip(s : STRING)                : STRING FROM strlib
+ROUTINE rstrip(s : STRING)                : STRING FROM strlib
+ROUTINE b_to_s(b : BOOLEAN)               : STRING FROM strlib
+ROUTINE i_to_s(i : INTEGER)               : STRING FROM strlib
+ROUTINE r_to_s(r : REAL)                  : STRING FROM strlib
+ROUTINE p_to_s(p : XYZWPR)                : STRING FROM strlib
+ROUTINE esc_quotes(s : STRING)            : STRING FROM strlib

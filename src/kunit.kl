@@ -34,7 +34,7 @@ VAR
   entry        : INTEGER
   status       : INTEGER
 
-%INCLUDE strlib.h
+%INCLUDE includes/strlib.h
 
 -- Private: Initialize KUNIT
 ROUTINE kunit_init
@@ -168,6 +168,10 @@ ROUTINE kunit_eq_int(expected : INTEGER; actual : INTEGER) : BOOLEAN
   BEGIN
     assrtn_count = assrtn_count + 1
 
+	IF UNINIT(actual) THEN
+	  error_msg = 'Expected ' + i_to_s(expected) + ' but got UNINIT'
+	  RETURN(false)
+	ENDIF
     IF expected=actual THEN
       RETURN(true)
     ELSE
@@ -175,6 +179,40 @@ ROUTINE kunit_eq_int(expected : INTEGER; actual : INTEGER) : BOOLEAN
       RETURN(false)
     ENDIF
   END kunit_eq_int
+
+ROUTINE kunit_un_int(actual : INTEGER) : BOOLEAN
+BEGIN
+	assrtn_count = assrtn_count + 1
+	IF UNINIT(actual) THEN
+		RETURN(true)
+	ELSE
+		error_msg = 'Expected UNINIT but got ' + i_to_s(actual)
+		RETURN(false)
+	ENDIF
+END kunit_un_int
+
+ROUTINE kunit_un_str(actual : STRING) : BOOLEAN
+BEGIN
+	assrtn_count = assrtn_count + 1
+	IF UNINIT(actual) THEN
+		RETURN(true)
+	ELSE
+		error_msg = 'Expected UNINIT but got "' + actual + '"'
+		RETURN(false)
+	ENDIF
+END kunit_un_str
+
+ROUTINE kunit_un_r(actual : REAL) : BOOLEAN
+BEGIN
+	assrtn_count = assrtn_count + 1
+	IF UNINIT(actual) THEN
+		RETURN(true)
+	ELSE
+		error_msg = 'Expected UNINIT but got ' + r_to_s(actual)
+		RETURN(false)
+	ENDIF
+END kunit_un_r
+
 
 ROUTINE kunit_eq_r(expected : REAL; actual : REAL) : BOOLEAN
   BEGIN
@@ -217,7 +255,7 @@ ROUTINE kunit_eq_str(expected : STRING; actual : STRING) : BOOLEAN
     IF expected=actual THEN
       RETURN(true)
     ELSE
-      error_msg = 'Expected "' + expected + '"' + chr(13) + '         but got "' + actual + '"' 
+      error_msg = 'Expected "' + expected + '" but got "' + actual + '"' 
       RETURN(false)
     ENDIF
   END kunit_eq_str
@@ -420,7 +458,6 @@ BEGIN
       WRITE response ('Timed out waiting for a task', CR)
     ENDIF
   ENDWHILE
-  WRITE(CR)
 
   kunit_output
   kunit_clean

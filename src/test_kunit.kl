@@ -7,7 +7,7 @@ VAR
   assrtn_count FROM kunit : INTEGER
   error_msg    FROM kunit : STRING[254]
 
-%INCLUDE kunit.h
+%INCLUDE includes/kunit.h
 -- test private routines
 ROUTINE kunit_fail(name : STRING) FROM kunit
 ROUTINE kunit_pass                FROM kunit
