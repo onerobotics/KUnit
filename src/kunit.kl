@@ -2,7 +2,7 @@ PROGRAM kunit
 %NOLOCKGROUP
 %UNINITVARS
 CONST
-  VERSION    = '0.1.0'
+  VERSION    = '1.0.0'
   LINE_WRAP  = 40
   PIPE_FILE  = 'PIP:KUNIT.DAT'
   FAIL_FILE  = 'PIP:KUNIT_FAIL.DAT'
@@ -56,14 +56,14 @@ ROUTINE kunit_init
       WRITE response (
         '<!DOCTYPE html>',
         '<html><head>',
-        '<title>KUnit</title>',
+        '<title>KUnit v',VERSION,'</title>',
         '<style>body { padding: 20px; }</style>',
         '<meta charset="UTF-8" />',
         '</head><body>',
         '<pre>', CR)
     ENDIF
 
-    WRITE response ('KUnit', CR, CR)
+    WRITE response ('KUnit v', VERSION, CR, CR)
 
     test_count    = 0
     fail_count    = 0
