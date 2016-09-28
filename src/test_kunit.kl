@@ -1,11 +1,13 @@
 PROGRAM test_kunit
 %NOLOCKGROUP
+%UNINITVARS
 VAR
   test_count   FROM kunit : INTEGER
   fail_count   FROM kunit : INTEGER
   pass_count   FROM kunit : INTEGER
   assrtn_count FROM kunit : INTEGER
   error_msg    FROM kunit : STRING[254]
+  uninitInt : INTEGER
 
 %INCLUDE includes/kunit.h
 -- test private routines
@@ -82,7 +84,7 @@ ROUTINE t_assert_t : BOOLEAN
     b = kunit_assert(true)
     k = assrtn_count
     c = kunit_eq_int(i+1, k)
-    RETURN(b)
+    RETURN(b AND c)
   END t_assert_t
 
 ROUTINE t_assert_f : BOOLEAN
@@ -96,7 +98,7 @@ ROUTINE t_assert_f : BOOLEAN
     b = kunit_assert(false)
     k = assrtn_count
     c = kunit_eq_int(i+1, k)
-    RETURN(NOT(b))
+    RETURN(NOT(b) AND c)
   END t_assert_f
 
 ROUTINE t_eq_intp : BOOLEAN
@@ -110,7 +112,7 @@ ROUTINE t_eq_intp : BOOLEAN
     b = kunit_eq_int(1,1)
     k = assrtn_count
     c = kunit_eq_int(i+1, k)
-    RETURN(b)
+    RETURN(b AND c)
   END t_eq_intp
 
 ROUTINE t_eq_intf : BOOLEAN
@@ -125,8 +127,38 @@ ROUTINE t_eq_intf : BOOLEAN
     k = assrtn_count
     c = kunit_eq_str('Expected 1 but got 2', error_msg)
     c = kunit_eq_int(i+1, k)
-    RETURN(NOT(b))
+    RETURN(NOT(b) AND c)
   END t_eq_intf
+
+ROUTINE t_un_intp : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+  BEGIN
+    i = assrtn_count
+    b = kunit_un_int(uninitInt)
+    k = assrtn_count
+    c = kunit_eq_int(i+1, k)
+    RETURN(b AND c)
+  END t_un_intp
+
+ROUTINE t_un_intf : BOOLEAN
+  VAR
+    i : INTEGER
+    k : INTEGER
+    b : BOOLEAN
+    c : BOOLEAN
+  BEGIN
+    i = assrtn_count
+    b = kunit_un_int(1)
+    k = assrtn_count
+    c = kunit_eq_str('Expected UNINIT but got 1', error_msg)
+    c = kunit_eq_int(i+1, k)
+    RETURN(NOT(b) AND c)
+  END t_un_intf
+
 
 ROUTINE t_eq_rp : BOOLEAN
   VAR
@@ -139,7 +171,7 @@ ROUTINE t_eq_rp : BOOLEAN
     b = kunit_eq_r(3.14,3.14)
     k = assrtn_count
     c = kunit_eq_int(i+1, k)
-    RETURN(b)
+    RETURN(b AND c)
   END t_eq_rp
 
 ROUTINE t_eq_rf : BOOLEAN
@@ -154,7 +186,7 @@ ROUTINE t_eq_rf : BOOLEAN
     k = assrtn_count
     c = kunit_eq_str('Expected 3.14 but got 3.15', error_msg)
     c = kunit_eq_int(i+1, k)
-    RETURN(NOT(b))
+    RETURN(NOT(b) AND c)
   END t_eq_rf
 
 ROUTINE t_eq_strp : BOOLEAN
@@ -168,7 +200,7 @@ ROUTINE t_eq_strp : BOOLEAN
     b = kunit_eq_str('a','a')
     k = assrtn_count
     c = kunit_eq_int(i+1, k)
-    RETURN(b)
+    RETURN(b AND c)
   END t_eq_strp
 
 ROUTINE t_eq_strf : BOOLEAN
@@ -183,7 +215,7 @@ ROUTINE t_eq_strf : BOOLEAN
     k = assrtn_count
     c = kunit_eq_str('Expected "a" but got "b"', error_msg)
     c = kunit_eq_int(i+1, k)
-    RETURN(NOT(b))
+    RETURN(NOT(b) AND c)
   END t_eq_strf
 
 ROUTINE t_eq_posp : BOOLEAN
@@ -205,7 +237,7 @@ ROUTINE t_eq_posp : BOOLEAN
     b = kunit_eq_pos(p,p)
     k = assrtn_count
     c = kunit_eq_int(i+1, k)
-    RETURN(b)
+    RETURN(b AND c)
   END t_eq_posp
 
 ROUTINE t_eq_posf : BOOLEAN
@@ -240,7 +272,7 @@ ROUTINE t_eq_posf : BOOLEAN
       + 'X: 1.0 Y: 0.0 Z: 0.0' + chr(13) &
       + 'W: 0.0 P: 0.0 R: 0.0', error_msg)
     c = kunit_eq_int(i+1, k)
-    RETURN(NOT(b))
+    RETURN(NOT(b) AND c)
   END t_eq_posf
 
 ROUTINE t_eq_posu : BOOLEAN
@@ -256,7 +288,7 @@ ROUTINE t_eq_posu : BOOLEAN
     k = assrtn_count
     c = kunit_eq_str('Expected and/or actual are UNINIT', error_msg)
     c = kunit_eq_int(i+1, k)
-    RETURN(NOT(b))
+    RETURN(NOT(b) AND c)
   END t_eq_posu
 
 BEGIN
@@ -268,6 +300,8 @@ BEGIN
   kunit_test('kunit_assert(false)', t_assert_f)
   kunit_test('kunit_eq_int pass', t_eq_intp)
   kunit_test('kunit_eq_int fail', t_eq_intf)
+  kunit_test('kunit_un_int pass', t_un_intp)
+  kunit_test('kunit_un_int fail', t_un_intf)
   kunit_test('kunit_eq_r pass', t_eq_rp)
   kunit_test('kunit_eq_r fail', t_eq_rf)
   kunit_test('kunit_eq_str pass', t_eq_strp)
