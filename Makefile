@@ -1,8 +1,19 @@
-bin/%.pc : src/%.kl
-	ktrans $< $@ /config config/robot.ini
-	cmd //C del *.pc
+KL_FILES := $(wildcard src/*.kl)
 
-all: bin/strlib.pc bin/kunit.pc bin/test_kunit.pc bin/test_strlib.pc
+PC_FILES = $(addprefix bin/,$(notdir $(KL_FILES:.kl=.pc)))
+
+bin/%.pc: src/%.kl src/includes/*.kl
+	ktrans $< $@ /config config/robot.ini
+
+all: $(PC_FILES)
+
+.PHONY : clean todo deploy test
 
 clean:
-	cmd //C del bin\\\*.pc
+	rm bin/*.*
+
+todo:
+	grep -i "todo" src/*.*
+
+test:
+	@curl -s http://localhost/karel/kunit?filenames=test_kunit,test_strlib

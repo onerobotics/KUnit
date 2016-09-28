@@ -1,3 +1,4 @@
 bin/*.pc
 *.swp
-config/robot.ini
+*.pc
+robot.ini
