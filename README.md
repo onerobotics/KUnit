@@ -86,7 +86,7 @@ together:
       kunit_test('0+0=0', test_00)
 
       -- tell the test runner we are done
-	  kunit_done
+      kunit_done
     END test_add_int
 
 Since KAREL doesn't support blocks as arguments to functions or
@@ -116,6 +116,12 @@ XYZWPR positions are equal.
 `kunit_eq_pip(fname : STRING)` - Assert that the KUnit pipe is equal
 to the file located at the provided path (generally for use comparing
 STRINGs longer than 254 characters)
+
+`kunit_un_int(actual : INTEGER)` - Assert an INTEGER is UNINIT.
+
+`kunit_un_str(actual : STRING)` - Assert a STRING is UNINIT.
+
+`kunit_un_r(actual : REAL)` - Assert a REAL is uninit.
 
 ## Under the Hood
 
