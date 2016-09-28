@@ -3,7 +3,8 @@ KL_FILES := $(wildcard src/*.kl)
 PC_FILES = $(addprefix bin/,$(notdir $(KL_FILES:.kl=.pc)))
 
 bin/%.pc: src/%.kl src/includes/*.kl
-	ktrans $< $@ /config config/robot.ini
+	ktrans $< $@
+	rm *.pc
 
 all: $(PC_FILES)
 
