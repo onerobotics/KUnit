@@ -18,7 +18,7 @@ feedback via the web browser.
 ## Usage
 
 1. Download the latest release
-2. Copy the `kunit.pc` and `strlib.pc` files to your robot
+2. Copy the `kunit.pc` and `vendor/strings.pc` files to your robot
 3. Copy the `kunit.h.kl` to your project's support directory or the
    same directory as your KAREL test file
 4. `%INCLUDE kunit.h` in your test KAREL program
@@ -38,16 +38,13 @@ The output is unformatted by default. Set `output=html` to get HTML formatting.
 You can run multiple test files in parallel by a comma-separated list
 of filenames to the test runner.
 
-    http://your.robot/KAREL/kunit?filenames=test_kunit,test_strlib
+    http://your.robot/KAREL/kunit?filenames=test_kunit,test_something_else
 
 ## Example
 
-Look at the `src/test_kunit.kl` and `src/test_strlib.kl` files for
-real-world examples. (Note: the test_kunit.kl file is a bit hack-ish,
-but testing KUnit with KUnit? so meta...)
+Look at the `src/test_kunit.kl` file for a real-world example. (Note: the test_kunit.kl file is a bit hack-ish, but testing KUnit with KUnit? so meta...)
 
-Here's a simple example of testing a routine that adds two INTEGERs
-together:
+Here's a simple example of testing a routine that adds two INTEGERs together:
 
     PROGRAM test_add_int
     -- %NOLOCKGROUP is required to run KAREL from browser
