@@ -34,7 +34,7 @@ VAR
   entry        : INTEGER
   status       : INTEGER
 
-%INCLUDE includes/strlib.h
+%INCLUDE includes/vendor/strings.h
 
 -- Private: Initialize KUNIT
 ROUTINE kunit_init
