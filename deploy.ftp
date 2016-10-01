@@ -1,0 +1,6 @@
+anon
+
+bin
+prompt
+mput bin/*.pc
+quit

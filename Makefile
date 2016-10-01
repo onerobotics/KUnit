@@ -18,3 +18,6 @@ todo:
 
 test:
 	@curl -s http://localhost/karel/kunit?filenames=test_kunit,test_strlib
+
+deploy:
+	ftp -s:deploy.ftp localhost
