@@ -6,7 +6,7 @@ feedback via the web browser.
 
 ## Example Output
 
-    KUnit
+    KUnit v1.0.0
 
     ........
 
