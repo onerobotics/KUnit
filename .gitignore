@@ -1,4 +1,4 @@
-bin/*.pc
 *.swp
 *.pc
 robot.ini
+bin/
