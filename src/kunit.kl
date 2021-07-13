@@ -140,7 +140,7 @@ ROUTINE kunit_done
 --
 --   kunit_assert(false)
 --   # => false
-ROUTINE kunit_assert(actual : BOOLEAN) : BOOLEAN
+ROUTINE kunit_assert_t(actual : BOOLEAN) : BOOLEAN
   BEGIN
     assrtn_count = assrtn_count + 1
 
@@ -150,7 +150,30 @@ ROUTINE kunit_assert(actual : BOOLEAN) : BOOLEAN
       error_msg = 'Expected true but got false'
       RETURN(false)
     ENDIF
-  END kunit_assert
+  END kunit_assert_t
+  
+  -- Public: Assert that something is false
+--
+-- actual - A BOOLEAN value
+--
+-- Examples
+--
+--   kunit_assert_f(true)
+--   # => false
+--
+--   kunit_assert_f(false)
+--   # => true
+ROUTINE kunit_assert_f(actual : BOOLEAN) : BOOLEAN
+  BEGIN
+    assrtn_count = assrtn_count + 1
+
+    IF NOT actual THEN
+      RETURN(true)
+    ELSE
+      error_msg = 'Expected false but got true'
+      RETURN(false)
+    ENDIF
+  END kunit_assert_f
 
 -- Public: Assert that two INTEGERs are equal
 --
