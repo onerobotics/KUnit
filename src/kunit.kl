@@ -1,14 +1,16 @@
 PROGRAM kunit
 %NOLOCKGROUP
 %UNINITVARS
+%NOBUSYLAMP
 CONST
   VERSION    = '1.0.0'
   LINE_WRAP  = 40
   PIPE_FILE  = 'PIP:KUNIT.DAT'
   FAIL_FILE  = 'PIP:KUNIT_FAIL.DAT'
   PROG_PIPE  = 'PIP:KUNIT_PROGRESS.DAT'
-  KUNIT_SEMA = 1
-  MAX_WAIT   = 1000
+  KUNIT_SEMA = 10
+  MAX_WAIT   = 10000
+  SEV_ABORT  = 2
 VAR
   response     : FILE
   pipe_f       : FILE
@@ -21,7 +23,7 @@ VAR
   assrtn_count : INTEGER
   error_msg    : STRING[254]
   filenames    : STRING[254]
-  filenames_a  : ARRAY[16] OF STRING[16]
+  filenames_a  : ARRAY[16] OF STRING[36]
   timeout      : BOOLEAN
   task_count   : INTEGER
   i            : INTEGER
@@ -379,11 +381,16 @@ ROUTINE kunit_output
     ENDIF
 
     OPEN FILE prog_f ('RO', PROG_PIPE)
-    BYTES_AHEAD(prog_F, b, status)
+    status = IO_STATUS(prog_f)
+    IF status<>0 THEN
+    	POST_ERR(status, '', 0, SEV_ABORT)
+    ENDIF
+
+    BYTES_AHEAD(prog_f, b, status)
     WHILE b > 0 DO
       READ prog_f (s::b::0)
       WRITE response (s)
-      BYTES_AHEAD(prog_F, b, status)
+      BYTES_AHEAD(prog_f, b, status)
     ENDWHILE
     CLOSE FILE prog_f
 
